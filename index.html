@@ -95,10 +95,10 @@
     nav.tabs { display: none; }
     .grid {
       display: grid;
-      grid-template-columns: minmax(300px, 1fr) minmax(0, 1.4fr) minmax(340px, 1.05fr);
+      grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr) minmax(340px, 1.05fr);
       grid-template-areas:
-        "add  list cal"
-        "now  list cal";
+        "list add cal"
+        "list now cal";
       grid-template-rows: auto 1fr;
       gap: 16px;
       align-items: start;
@@ -135,10 +135,10 @@
 
   @media (min-width: 860px) and (max-width: 1200px) {
     .grid {
-      grid-template-columns: minmax(280px, 1fr) minmax(0, 1.3fr);
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
       grid-template-areas:
-        "add  list"
-        "now  list"
+        "list add"
+        "list now"
         "cal  cal";
       grid-template-rows: auto auto auto;
     }
@@ -419,12 +419,20 @@
   .cat-header {
     width: 100%; display: flex; align-items: center; gap: 9px; background: none; border: none;
     padding: 8px 4px; margin: 22px 0 8px; border-bottom: 1px solid var(--line); text-align: left;
+    cursor: pointer;
   }
   .cat-header.plain { pointer-events: none; }
+  .cat-header .chev { color: var(--muted); font-size: 11px; width: 12px; flex: none; }
   .cat-header .cname { font-family: var(--font-display); font-weight: 600; font-size: 16px; letter-spacing: -.01em; color: var(--ink); flex: 1; }
+  .cat-header .ccount { font-family: var(--font-body); font-weight: 500; font-size: 12.5px; color: var(--muted); }
   .cat-header .cdot { width: 11px; height: 11px; }
-  .cat-header .cedit { font-size: 12px; color: var(--muted); opacity: 0; transition: opacity .12s; }
+  .cat-header .cedit { font-size: 12px; color: var(--muted); opacity: .55; transition: opacity .12s; background: none; border: none; cursor: pointer; }
   .cat-header:hover .cedit { opacity: 1; }
+  .item.project .chev-btn {
+    flex: none; background: none; border: none; color: var(--accent); font-size: 12px;
+    width: 22px; padding: 0; margin-top: 1px; cursor: pointer; text-align: center;
+  }
+  .item.project .chev-btn:hover { color: var(--accent-deep); }
 
   .swatches { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
   .swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
@@ -555,7 +563,7 @@
         <div class="cat-chooser" id="add-cat-chooser"></div>
         <div class="cat-new" id="add-cat-new" style="display:none">
           <input type="text" id="add-cat-input" placeholder="Name the project…" />
-          <button class="step-add-btn" id="add-cat-confirm" aria-label="create project">＋</button>
+          <button class="step-add-btn" id="add-cat-confirm" aria-label="create project">+</button>
         </div>
 
         <div class="add-divider"></div>
@@ -603,13 +611,13 @@
     </section>
 
     <!-- NOW / FOCUS -->
-    <section class="panel active" id="panel-now" data-panel="now">
+    <section class="panel" id="panel-now" data-panel="now">
       <div class="panel-head">What now?</div>
       <div id="screen-now" class="screen now"></div>
     </section>
 
     <!-- LIST -->
-    <section class="panel" id="panel-list" data-panel="list">
+    <section class="panel active" id="panel-list" data-panel="list">
       <div class="panel-head">Everything</div>
       <div id="screen-list" class="screen list"></div>
     </section>
@@ -626,10 +634,10 @@
   </main>
 
   <nav class="tabs">
-    <button data-tab="now" aria-current="true"><span class="ti">◎</span>Now</button>
-    <button data-tab="add"><span class="ti">＋</span>Add</button>
-    <button data-tab="list"><span class="ti">☰</span>All</button>
-    <button data-tab="plan"><span class="ti">▦</span>Plan</button>
+    <button data-tab="list" aria-current="true"><span class="ti"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>All</button>
+    <button data-tab="add"><span class="ti"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Add</button>
+    <button data-tab="plan"><span class="ti"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></span>Plan</button>
+    <button data-tab="now"><span class="ti"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg></span>Now</button>
   </nav>
 </div>
 
@@ -643,7 +651,7 @@
       <div class="cat-chooser" id="edit-cat-chooser"></div>
       <div class="cat-new" id="edit-cat-new" style="display:none">
         <input type="text" id="edit-cat-input" placeholder="Name the project…" />
-        <button class="step-add-btn" id="edit-cat-confirm" aria-label="create project">＋</button>
+        <button class="step-add-btn" id="edit-cat-confirm" aria-label="create project">+</button>
       </div>
       <div class="add-divider"></div>
     </div>
@@ -689,7 +697,7 @@
       <div id="edit-steps"></div>
       <div class="step-add">
         <input type="text" id="edit-step-input" placeholder="Add a step and press enter…" />
-        <button class="step-add-btn" id="edit-step-add" aria-label="add step">＋</button>
+        <button class="step-add-btn" id="edit-step-add" aria-label="add step">+</button>
       </div>
     </div>
 
@@ -914,15 +922,22 @@
     wireFocus(el, task);
   }
 
+  function energyBars(level) {
+    var bars = [{ x: 3, y: 13, h: 7 }, { x: 10, y: 9, h: 11 }, { x: 17, y: 5, h: 15 }];
+    var r = bars.map(function (b, i) {
+      return '<rect x="' + b.x + '" y="' + b.y + '" width="4" height="' + b.h + '" rx="1.2" fill="currentColor" opacity="' + (i < level ? "1" : ".25") + '"/>';
+    }).join("");
+    return '<svg viewBox="0 0 24 24" width="22" height="22">' + r + '</svg>';
+  }
   function energyHtml() {
     return '' +
       '<div class="energy">' +
         '<h2>How\'s your energy right now?</h2>' +
         '<p>This shapes what I hand you.</p>' +
         '<div class="energy-opts">' +
-          '<button data-lvl="low"><span class="ico">▁</span>Low</button>' +
-          '<button data-lvl="okay"><span class="ico">▄</span>Okay</button>' +
-          '<button data-lvl="good"><span class="ico">█</span>Good</button>' +
+          '<button data-lvl="low"><span class="ico">' + energyBars(1) + '</span>Low</button>' +
+          '<button data-lvl="okay"><span class="ico">' + energyBars(2) + '</span>Okay</button>' +
+          '<button data-lvl="good"><span class="ico">' + energyBars(3) + '</span>Good</button>' +
         '</div>' +
       '</div>';
   }
@@ -1008,7 +1023,7 @@
       var openLeft = childrenOf(p.id).some(function (k) { return k.status !== "done"; });
       if (!openLeft) {
         p.status = "done"; p.doneAt = now();
-        setTimeout(function () { toast("🎉 " + p.title + " — done!"); }, 350);
+        setTimeout(function () { toast("" + p.title + " — done!"); }, 350);
       }
     }
   }
@@ -1091,7 +1106,11 @@
     // reset
     ta.value = ""; ta.style.borderColor = "";
     resetDraft();
+    refresh();
     toast("Added to the pile");
+  });
+  document.getElementById("title").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("save-task").click(); }
   });
 
   function resetDraft() {
@@ -1123,7 +1142,7 @@
         return '<button type="button" class="cat-chip' + (sel === c.id ? " on" : "") + '" data-cat="' + c.id + '">' +
                '<span class="cdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</button>';
       }).join("");
-      html += '<button type="button" class="cat-chip newchip" data-catnew="1">＋ New</button>';
+      html += '<button type="button" class="cat-chip newchip" data-catnew="1">+ New</button>';
       chooserEl.innerHTML = html;
       chooserEl.querySelectorAll("[data-cat]").forEach(function (b) {
         b.addEventListener("click", function () {
@@ -1283,6 +1302,9 @@
     toast("Deleted");
   });
   document.getElementById("edit-cancel").addEventListener("click", closeEdit);
+  document.getElementById("edit-title").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("edit-save").click(); }
+  });
   document.getElementById("edit-backdrop").addEventListener("click", function (e) {
     if (e.target === this) closeEdit();
   });
@@ -1326,6 +1348,9 @@
     toast("Project deleted");
   });
   document.getElementById("cat-cancel").addEventListener("click", closeCatEditor);
+  document.getElementById("cat-name").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); document.getElementById("cat-save").click(); }
+  });
   document.getElementById("cat-backdrop").addEventListener("click", function (e) {
     if (e.target === this) closeCatEditor();
   });
@@ -1339,6 +1364,13 @@
   }
 
   // ---------- LIST ----------
+  // All view collapses to top level: projects and tasks-with-steps start collapsed.
+  // These maps (id -> true) remember what the user has opened, and survive re-renders.
+  var expandedCat = {}, expandedTask = {};
+  function chev(open) {
+    return '<span class="chev' + (open ? " open" : "") + '"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>';
+  }
+
   function renderList() {
     var el = document.getElementById("screen-list");
     var openTasks = [], doneTasks = [];
@@ -1356,12 +1388,14 @@
     var cats = state.categories || [];
     cats.forEach(function (c) {
       var arr = openTasks.filter(function (t) { return t.categoryId === c.id; });
-      if (arr.length) html += catHeader(c) + renderTasks(arr);
+      if (!arr.length) return;
+      html += catHeader(c, arr.length);
+      if (expandedCat[c.id]) html += renderTasks(arr);
     });
     var uncat = openTasks.filter(function (t) { return !t.categoryId || !catById(t.categoryId); });
     if (uncat.length) {
       if (cats.length) html += '<div class="cat-header plain"><span class="cname">No project</span></div>';
-      html += renderTasks(uncat);
+      html += renderTasks(uncat); // loose tasks are already at their top level — always shown
     }
     if (doneTasks.length) {
       html += '<div class="list-group-label">Done</div>' + renderTasks(doneTasks);
@@ -1391,7 +1425,22 @@
       });
     });
     el.querySelectorAll("[data-catedit]").forEach(function (b) {
-      b.addEventListener("click", function () { openCatEditor(b.dataset.catedit); });
+      b.addEventListener("click", function (e) { e.stopPropagation(); openCatEditor(b.dataset.catedit); });
+    });
+    el.querySelectorAll("[data-cattoggle]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.dataset.cattoggle;
+        if (expandedCat[id]) delete expandedCat[id]; else expandedCat[id] = true;
+        renderList();
+      });
+    });
+    el.querySelectorAll("[data-tasktoggle]").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var id = b.dataset.tasktoggle;
+        if (expandedTask[id]) delete expandedTask[id]; else expandedTask[id] = true;
+        renderList();
+      });
     });
     el.querySelectorAll("[data-sched]").forEach(function (b) {
       b.addEventListener("click", function (e) {
@@ -1400,12 +1449,14 @@
       });
     });
   }
-  function catHeader(c) {
-    return '<button class="cat-header" data-catedit="' + c.id + '">' +
+  function catHeader(c, count) {
+    var open = !!expandedCat[c.id];
+    return '<div class="cat-header" data-cattoggle="' + c.id + '">' +
+             chev(open) +
              '<span class="cdot" style="background:' + c.color + '"></span>' +
-             '<span class="cname">' + esc(c.name) + '</span>' +
-             '<span class="cedit">edit</span>' +
-           '</button>';
+             '<span class="cname">' + esc(c.name) + ' <span class="ccount">' + count + '</span></span>' +
+             '<button class="cedit" data-catedit="' + c.id + '">edit</button>' +
+           '</div>';
   }
   function renderTasks(arr) {
     return arr.map(function (t) { return hasSteps(t) ? projectBlock(t) : standaloneItem(t); }).join("");
@@ -1423,7 +1474,7 @@
   // a clock button for anything schedulable that isn't already placed today
   function schedBtn(t) {
     if (t.status === "done" || isScheduledToday(t)) return "";
-    return '<button class="sched" data-sched="' + t.id + '" aria-label="schedule">🕘</button>';
+    return '<button class="sched" data-sched="' + t.id + '" aria-label="schedule"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg></button>';
   }
   function standaloneItem(t) {
     var isDone = t.status === "done";
@@ -1459,6 +1510,7 @@
   function projectBlock(t) {
     var pr = stepProgress(t.id);
     var isDone = t.status === "done";
+    var open = !!expandedTask[t.id];
     var bits = [];
     var dl = fmtDeadline(t); if (dl) bits.push(dl);
     if (t.priority === "high") bits.push("high priority");
@@ -1466,14 +1518,14 @@
     var sub = pr.done + ' of ' + pr.total + ' steps' + (bits.length ? ' · ' + bits.join(" · ") : "");
     var head = '' +
       '<div class="item project' + (isDone ? " done" : "") + '">' +
-        '<span class="proj-badge" aria-hidden="true">▤</span>' +
+        '<button class="chev-btn" data-tasktoggle="' + t.id + '" aria-label="expand steps">' + chev(open) + '</button>' +
         '<button class="body" data-edit="' + t.id + '" aria-label="edit task"><div class="t">' + esc(t.title) + '</div>' +
           '<div class="sub">' + sub + '</div>' +
           '<div class="progress"><span style="width:' + pct + '%"></span></div>' +
         '</button>' +
         '<button class="del" data-del="' + t.id + '" aria-label="delete task">×</button>' +
       '</div>';
-    var steps = childrenOf(t.id).map(stepRow).join("");
+    var steps = open ? childrenOf(t.id).map(stepRow).join("") : "";
     return '<div class="project-wrap">' + head + steps + '</div>';
   }
 
@@ -1538,7 +1590,7 @@
     var el = document.getElementById("calendar");
     var totalMin = (END_HOUR - START_HOUR) * 60;
     var height = totalMin * PX_PER_MIN;
-    var hint = schedulingId ? '<div class="sched-hint">▹ Now click a time to drop it in</div>' : '';
+    var hint = schedulingId ? '<div class="sched-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Now click a time to drop it in</div>' : '';
 
     var hours = "";
     for (var h = START_HOUR; h < END_HOUR; h++) {
@@ -1581,7 +1633,7 @@
         '<div class="cal-day' + (schedulingId ? " placing" : "") + '" style="height:' + height + 'px">' + hours + '</div>' +
         '<div class="cal-blocks">' + blocks + '</div>' + nowLine +
       '</div>' +
-      (items.length ? "" : '<div class="cal-empty">Nothing scheduled yet. Tap 🕘 on a task, or hit “Plan my day”.</div>');
+      (items.length ? "" : '<div class="cal-empty">Nothing scheduled yet. Use the schedule button on a task, or hit “Plan my day”.</div>');
 
     var day = el.querySelector(".cal-day");
     if (day) {

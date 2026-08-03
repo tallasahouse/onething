@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#767cd6" />
+<title>One Thing</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #eceef3;
+    --surface: #fafbfc;
+    --surface-2: #f1f3f7;
+    --ink: #2a2e37;
+    --muted: #6d7482;
+    --line: #e0e3ea;
+    --accent: #767cd6;
+    --accent-deep: #565cb0;
+    --accent-soft: #e7e8f7;
+    --sage: #6fae8e;
+    --sage-soft: #e3f0e8;
+    --amber: #d0913f;
+    --amber-soft: #f6ebd7;
+    --coral: #d47f74;
+    --radius: 20px;
+    --shadow: 0 6px 24px rgba(42, 46, 55, .07), 0 1px 3px rgba(42, 46, 55, .05);
+    --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: var(--font-body);
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.45;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .app {
+    max-width: 520px;
+    margin: 0 auto;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0 20px calc(84px + env(safe-area-inset-bottom));
+  }
+
+  header.top {
+    padding: max(18px, env(safe-area-inset-top)) 2px 6px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -.02em;
+  }
+  .wordmark .dot { color: var(--accent); }
+  .tagline { font-size: 13px; color: var(--muted); }
+
+  /* ---------- MOBILE: tabbed panels ---------- */
+  .grid { flex: 1; display: block; }
+  .panel { display: none; animation: fade .25s ease both; }
+  .panel.active { display: flex; flex-direction: column; flex: 1; }
+  .panel-head { display: none; } /* tabs already label context on mobile */
+  #panel-plan .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-display); font-weight: 600; font-size: 18px;
+    letter-spacing: -.01em; color: var(--ink); margin: 8px 0 14px;
+  }
+  .screen { flex: 1; display: flex; flex-direction: column; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- WIDE: dashboard grid ---------- */
+  @media (min-width: 860px) {
+    .app {
+      max-width: 1320px;
+      padding: 0 24px 28px;
+    }
+    nav.tabs { display: none; }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(300px, 1fr) minmax(0, 1.4fr) minmax(340px, 1.05fr);
+      grid-template-areas:
+        "add  list cal"
+        "now  list cal";
+      grid-template-rows: auto 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    #panel-add  { grid-area: add; }
+    #panel-now  { grid-area: now; }
+    #panel-list { grid-area: list; align-self: stretch; }
+    #panel-plan { grid-area: cal; align-self: stretch; }
+
+    .panel {
+      display: flex !important; flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px 16px 18px;
+      animation: none;
+    }
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: var(--font-display); font-weight: 600;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .05em; font-size: 12px; margin-bottom: 12px;
+    }
+    #panel-list, #panel-plan { max-height: calc(100vh - 120px); }
+    #screen-list, #panel-plan #calendar { overflow-y: auto; }
+    .panel.active { flex: initial; }
+    /* panels already have their own card; strip the inner focus-card double-frame */
+    #panel-now .focus-card, #panel-now .energy { box-shadow: none; border: none; padding: 4px 2px 2px; }
+    #panel-now .energy { padding: 4px 2px; }
+    #screen-add .sub { display: none; }
+    .screen { animation: none; }
+  }
+
+  @media (min-width: 860px) and (max-width: 1200px) {
+    .grid {
+      grid-template-columns: minmax(280px, 1fr) minmax(0, 1.3fr);
+      grid-template-areas:
+        "add  list"
+        "now  list"
+        "cal  cal";
+      grid-template-rows: auto auto auto;
+    }
+    #panel-plan { max-height: none; }
+  }
+
+  /* ---------- NOW ---------- */
+  .now { justify-content: center; gap: 18px; padding-top: 8px; }
+
+  .energy {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 20px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .energy h2 { font-family: var(--font-display); font-weight: 600; font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+  .energy p { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+  .energy-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .energy-opts button {
+    border: 1.5px solid var(--line);
+    background: var(--surface-2);
+    border-radius: 14px;
+    padding: 16px 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    transition: transform .12s, border-color .12s, background .12s;
+  }
+  .energy-opts button:hover { border-color: var(--accent); }
+  .energy-opts button:active { transform: scale(.96); }
+  .energy-opts .ico { display: block; font-size: 22px; margin-bottom: 4px; }
+
+  .focus-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 26px 24px 22px;
+    animation: rise .32s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px) scale(.99); } to { opacity: 1; transform: none; } }
+
+  .why {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    padding: 5px 11px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .why.deadline { background: var(--amber-soft); color: #916324; }
+  .why.overdue  { background: #f3ddd8; color: #a04d40; }
+  .why.priority { background: var(--accent-soft); color: var(--accent-deep); }
+  .why.energy   { background: var(--sage-soft); color: #3f7a5c; }
+  .why.want     { background: var(--sage-soft); color: #3f7a5c; }
+
+  .task-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 27px;
+    line-height: 1.2;
+    letter-spacing: -.015em;
+    margin: 0 0 14px;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .chip {
+    font-size: 12.5px;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  .actions { display: flex; flex-direction: column; gap: 10px; }
+  .btn {
+    border: none;
+    border-radius: 14px;
+    padding: 15px;
+    font-size: 15.5px;
+    font-weight: 600;
+    transition: transform .12s, filter .12s, background .12s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.05); }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row .btn { flex: 1; }
+  .btn-ghost { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--muted); }
+
+  .doing .task-title { font-size: 24px; }
+  .doing-note { color: var(--muted); font-size: 14px; margin: -4px 0 18px; }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty .big { font-family: var(--font-display); font-size: 22px; color: var(--ink); font-weight: 600; margin-bottom: 6px; }
+  .empty .btn-primary { margin-top: 18px; display: inline-block; padding: 12px 22px; }
+
+  .recheck {
+    text-align: center;
+    margin-top: 4px;
+  }
+  .recheck button {
+    background: none; border: none; color: var(--muted);
+    font-size: 13px; text-decoration: underline; text-underline-offset: 3px;
+    padding: 8px;
+  }
+
+  /* ---------- ADD ---------- */
+  .add { padding-top: 10px; gap: 4px; }
+  .add h2, .list h2 {
+    font-family: var(--font-display); font-weight: 600; font-size: 24px;
+    letter-spacing: -.01em; margin: 6px 0 2px;
+  }
+  .add .sub { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+  .field-label { font-size: 13px; font-weight: 600; color: var(--muted); margin: 16px 0 8px; display: block; }
+  textarea#title {
+    width: 100%; border: 1.5px solid var(--line); border-radius: 16px;
+    background: var(--surface); padding: 15px; font-size: 17px; color: var(--ink);
+    resize: none; min-height: 76px; font-family: inherit; line-height: 1.4;
+  }
+  textarea#title:focus { outline: none; border-color: var(--accent); }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; }
+  .seg button {
+    border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+    padding: 9px 13px; border-radius: 999px; font-size: 13.5px; font-weight: 500;
+    transition: all .12s;
+  }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-deep); }
+  .seg button:active { transform: scale(.96); }
+  input[type="date"] {
+    border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+    border-radius: 12px; padding: 9px 12px; font-size: 14px; font-family: inherit;
+    margin-top: 8px;
+  }
+  input[type="date"]:focus { outline: none; border-color: var(--accent); }
+  .save-bar { margin-top: 26px; }
+  .save-bar .btn-primary { width: 100%; }
+  .saved-toast {
+    position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff; padding: 11px 20px; border-radius: 999px;
+    font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s; z-index: 50;
+  }
+  .saved-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- LIST ---------- */
+  .list { padding-top: 10px; }
+  .list-group-label {
+    font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted); margin: 22px 0 10px;
+  }
+  .item {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 13px 14px; margin-bottom: 9px; display: flex; align-items: flex-start; gap: 12px;
+  }
+  .item .check {
+    flex: none; width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--line);
+    background: var(--surface-2); margin-top: 1px;
+  }
+  .item.done .check { background: var(--sage); border-color: var(--sage); position: relative; }
+  .item.done .check::after { content: "✓"; color: #fff; font-size: 14px; position: absolute; inset: 0; display: grid; place-items: center; }
+  .item .body {
+    flex: 1; min-width: 0; text-align: left; background: none; border: none;
+    padding: 0; font: inherit; color: inherit; border-radius: 6px;
+  }
+  .item .body:hover .t { color: var(--accent-deep); }
+  .item .t { font-size: 15px; font-weight: 500; }
+  .item.done .t { color: var(--muted); text-decoration: line-through; }
+  .item .sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .item .del {
+    flex: none; background: none; border: none; color: var(--muted); font-size: 18px;
+    line-height: 1; padding: 4px 6px; border-radius: 8px;
+  }
+  .item .del:hover { color: var(--coral); background: var(--surface-2); }
+  .snoozed-note { font-size: 12px; color: var(--amber); }
+
+  /* ---------- EDIT SHEET ---------- */
+  .sheet-backdrop {
+    position: fixed; inset: 0; background: rgba(42, 46, 55, .38);
+    display: none; z-index: 60; align-items: flex-end; justify-content: center;
+  }
+  .sheet-backdrop.open { display: flex; animation: fade .2s ease both; }
+  .sheet {
+    background: var(--paper); width: 100%; max-width: 520px;
+    border-radius: 24px 24px 0 0; padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
+    max-height: 90vh; overflow-y: auto; animation: sheetUp .28s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes sheetUp { from { transform: translateY(30px); opacity: .6; } to { transform: none; opacity: 1; } }
+  .sheet-grip { width: 40px; height: 4px; border-radius: 4px; background: var(--line); margin: 8px auto 4px; }
+  .sheet h2 { font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -.01em; margin: 6px 0 14px; }
+  .sheet .save-bar { display: flex; gap: 10px; margin-top: 24px; }
+  .sheet .save-bar .btn-primary { flex: 1; }
+  .sheet .btn-danger { background: var(--surface); color: var(--coral); border: 1px solid var(--line); }
+  .sheet .btn-danger:hover { border-color: var(--coral); }
+  .sheet .cancel { text-align: center; margin-top: 12px; }
+  .sheet .cancel button { background: none; border: none; color: var(--muted); font-size: 14px; padding: 8px; text-decoration: underline; text-underline-offset: 3px; }
+
+  /* ---------- PROJECTS & STEPS ---------- */
+  .part-of {
+    font-size: 13px; color: var(--muted); margin-bottom: 10px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  }
+  .part-of strong { color: var(--accent-deep); font-weight: 600; }
+
+  .project-wrap { margin-bottom: 12px; }
+  .item.project { align-items: center; background: var(--surface); }
+  .item.project .proj-badge {
+    flex: none; width: 22px; text-align: center; color: var(--accent); font-size: 15px; margin-top: 1px;
+  }
+  .item.project .t { font-weight: 600; }
+  .progress { height: 5px; background: var(--surface-2); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+  .progress span { display: block; height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
+  .item.project.done .progress span { background: var(--sage); }
+
+  .item.step {
+    margin-left: 20px; border-left: 2px solid var(--accent-soft);
+    border-top-left-radius: 4px; border-bottom-left-radius: 4px; background: var(--surface);
+  }
+  .item.step .t { font-weight: 400; }
+
+  .steps-hint { font-size: 12.5px; color: var(--muted); margin: 0 0 10px; line-height: 1.4; }
+  .step-edit {
+    display: flex; align-items: center; gap: 8px; padding: 8px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .step-edit .dot { color: var(--accent); }
+  .step-edit .st { flex: 1; font-size: 14.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .step-edit.done .st { text-decoration: line-through; color: var(--muted); }
+  .step-time {
+    flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+    border-radius: 8px; padding: 4px 6px; font-size: 12.5px; font-family: inherit;
+  }
+  .step-edit .del { flex: none; background: none; border: none; color: var(--muted); font-size: 17px; padding: 2px 6px; border-radius: 6px; }
+  .step-edit .del:hover { color: var(--coral); }
+  .step-add { display: flex; gap: 8px; margin-top: 12px; }
+  .step-add input {
+    flex: 1; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+    border-radius: 12px; padding: 11px 13px; font-size: 15px; font-family: inherit;
+  }
+  .step-add input:focus { outline: none; border-color: var(--accent); }
+  .step-add-btn {
+    flex: none; width: 46px; border: none; background: var(--accent); color: #fff;
+    border-radius: 12px; font-size: 22px; line-height: 1;
+  }
+  .step-add-btn:active { transform: scale(.95); }
+
+  /* ---------- CATEGORIES ---------- */
+  .cat-chooser { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cat-chip {
+    border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+    padding: 9px 13px; border-radius: 999px; font-size: 13.5px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 7px; transition: all .12s;
+  }
+  .cat-chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-deep); }
+  .cat-chip.newchip { color: var(--muted); border-style: dashed; }
+  .cat-chip:active { transform: scale(.96); }
+  .cdot { width: 9px; height: 9px; border-radius: 50%; flex: none; display: inline-block; }
+  .cat-new { display: flex; gap: 8px; margin-top: 10px; }
+  .cat-new input {
+    flex: 1; border: 1.5px solid var(--accent); background: var(--surface); color: var(--ink);
+    border-radius: 12px; padding: 10px 13px; font-size: 15px; font-family: inherit;
+  }
+  .cat-new input:focus { outline: none; }
+
+  .cat-tag { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ink); }
+
+  .cat-header {
+    width: 100%; display: flex; align-items: center; gap: 9px; background: none; border: none;
+    padding: 8px 4px; margin: 22px 0 8px; border-bottom: 1px solid var(--line); text-align: left;
+  }
+  .cat-header.plain { pointer-events: none; }
+  .cat-header .cname { font-family: var(--font-display); font-weight: 600; font-size: 16px; letter-spacing: -.01em; color: var(--ink); flex: 1; }
+  .cat-header .cdot { width: 11px; height: 11px; }
+  .cat-header .cedit { font-size: 12px; color: var(--muted); opacity: 0; transition: opacity .12s; }
+  .cat-header:hover .cedit { opacity: 1; }
+
+  .swatches { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+  .swatch.on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--paper) inset; }
+  #cat-name {
+    width: 100%; border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface);
+    padding: 13px 15px; font-size: 17px; color: var(--ink); font-family: inherit; resize: none;
+  }
+  #cat-name:focus { outline: none; border-color: var(--accent); }
+
+  /* ---------- PLAN: CALENDAR & PROGRESS ---------- */
+  .plan-btn {
+    border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent-deep);
+    border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; font-family: var(--font-body);
+    text-transform: none; letter-spacing: 0;
+  }
+  .plan-btn:active { transform: scale(.96); }
+
+  #panel-plan .panel-head { text-transform: none; letter-spacing: -.01em; font-size: 15px; font-family: var(--font-display); color: var(--ink); }
+
+  .sched-hint {
+    font-size: 12.5px; color: var(--accent-deep); background: var(--accent-soft);
+    border-radius: 10px; padding: 8px 11px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+  }
+
+  /* progress */
+  .progress-panel { margin-bottom: 14px; }
+  .prog-stats { display: flex; gap: 10px; margin-bottom: 4px; }
+  .prog-card {
+    flex: 1; background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
+  }
+  .prog-num { font-family: var(--font-display); font-weight: 700; font-size: 24px; letter-spacing: -.02em; line-height: 1; }
+  .prog-label { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .prog-bar { height: 7px; background: var(--surface-2); border-radius: 5px; overflow: hidden; margin-top: 10px; }
+  .prog-bar span { display: block; height: 100%; background: var(--sage); border-radius: 5px; transition: width .35s; }
+
+  /* calendar timeline */
+  .cal-wrap { position: relative; margin-top: 6px; }
+  .cal-day { position: relative; border-left: 1px solid var(--line); margin-left: 46px; }
+  .cal-hour {
+    position: relative; box-sizing: border-box; border-top: 1px solid var(--line);
+  }
+  .cal-hour:first-child { border-top: none; }
+  .cal-hour .hlabel {
+    position: absolute; left: -46px; top: -7px; width: 40px; text-align: right;
+    font-size: 10.5px; color: var(--muted);
+  }
+  .cal-blocks { position: absolute; inset: 0; margin-left: 46px; pointer-events: none; }
+  .cal-block {
+    position: absolute; box-sizing: border-box; pointer-events: auto;
+    background: var(--accent-soft); border: 1px solid var(--accent);
+    border-left: 3px solid var(--accent); border-radius: 8px;
+    padding: 4px 7px; overflow: hidden; cursor: pointer;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .cal-block.done { background: var(--sage-soft); border-color: var(--sage); border-left-color: var(--sage); }
+  .cal-block .cb-title { font-size: 12px; font-weight: 600; color: var(--ink); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal-block.done .cb-title { text-decoration: line-through; color: var(--muted); }
+  .cal-block .cb-time { font-size: 10.5px; color: var(--muted); }
+  .cal-block .cb-actions { position: absolute; top: 3px; right: 4px; display: flex; gap: 2px; }
+  .cal-block .cb-actions button {
+    width: 18px; height: 18px; border: none; border-radius: 5px; background: rgba(255,255,255,.7);
+    color: var(--muted); font-size: 11px; line-height: 1; padding: 0; cursor: pointer;
+  }
+  .cal-block .cb-actions button:hover { color: var(--ink); }
+  .cal-now { position: absolute; left: 46px; right: 0; height: 2px; background: var(--coral); z-index: 3; pointer-events: none; }
+  .cal-now::before { content: ""; position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--coral); }
+  .cal-day.placing { cursor: crosshair; }
+  .cal-day.placing .cal-hour:hover { background: var(--accent-soft); }
+
+  /* list item schedule button */
+  .item .sched {
+    flex: none; background: none; border: none; color: var(--muted); font-size: 14px;
+    padding: 4px 6px; border-radius: 8px; line-height: 1;
+  }
+  .item .sched:hover { color: var(--accent); background: var(--surface-2); }
+  .item.picking { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .cal-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 18px 8px; }
+  .sched-tag { color: var(--accent-deep); font-weight: 600; }
+
+  /* project-first lead header on Add / Edit */
+  .add-lead {
+    font-family: var(--font-display); font-weight: 600; font-size: 16px;
+    letter-spacing: -.01em; color: var(--ink); margin: 6px 0 10px;
+  }
+  .add-lead .lead-note { font-family: var(--font-body); font-weight: 400; font-size: 12.5px; color: var(--muted); letter-spacing: 0; }
+  .add-divider { border-top: 1px solid var(--line); margin: 16px 0 2px; }
+
+  /* ---------- NAV ---------- */
+  nav.tabs {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(250,251,252,.92);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: center; gap: 4px;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    z-index: 40;
+  }
+  nav.tabs button {
+    flex: 1; max-width: 160px; background: none; border: none; color: var(--muted);
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px; border-radius: 12px; font-size: 11.5px; font-weight: 600;
+    transition: color .12s;
+  }
+  nav.tabs button .ti { font-size: 20px; }
+  nav.tabs button[aria-current="true"] { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <span class="wordmark">One<span class="dot">.</span>Thing</span>
+    <span class="tagline">it picks — you do</span>
+  </header>
+
+  <main class="grid">
+    <!-- ADD -->
+    <section class="panel" id="panel-add" data-panel="add">
+      <div class="panel-head">Add</div>
+      <div id="screen-add" class="screen add">
+        <p class="sub">Pick a project, then add the task — a title's enough.</p>
+
+        <div class="add-lead">Project <span class="lead-note">— client or grouping</span></div>
+        <div class="cat-chooser" id="add-cat-chooser"></div>
+        <div class="cat-new" id="add-cat-new" style="display:none">
+          <input type="text" id="add-cat-input" placeholder="Name the project…" />
+          <button class="step-add-btn" id="add-cat-confirm" aria-label="create project">＋</button>
+        </div>
+
+        <div class="add-divider"></div>
+
+        <label class="field-label">Task</label>
+        <textarea id="title" placeholder="e.g. Email the accountant back" rows="2"></textarea>
+
+        <label class="field-label">When's it due?</label>
+        <div class="seg" id="seg-deadline">
+          <button data-val="none" aria-pressed="true">No deadline</button>
+          <button data-val="today">Today</button>
+          <button data-val="tomorrow">Tomorrow</button>
+          <button data-val="week">This week</button>
+          <button data-val="pick">Pick a date</button>
+        </div>
+        <input type="date" id="deadline-date" style="display:none" />
+
+        <label class="field-label">Roughly how long?</label>
+        <div class="seg" id="seg-time">
+          <button data-val="5">5 min</button>
+          <button data-val="15" aria-pressed="true">15 min</button>
+          <button data-val="30">30 min</button>
+          <button data-val="60">1 hr</button>
+          <button data-val="120">2 hr+</button>
+        </div>
+
+        <label class="field-label">How much does it matter?</label>
+        <div class="seg" id="seg-priority">
+          <button data-val="low">Low</button>
+          <button data-val="med" aria-pressed="true">Medium</button>
+          <button data-val="high">High</button>
+        </div>
+
+        <label class="field-label">How do you feel about it?</label>
+        <div class="seg" id="seg-interest">
+          <button data-val="dread">Dread it</button>
+          <button data-val="neutral" aria-pressed="true">Neutral</button>
+          <button data-val="want">Want to</button>
+        </div>
+
+        <div class="save-bar">
+          <button class="btn btn-primary" id="save-task">Add to the pile</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOW / FOCUS -->
+    <section class="panel active" id="panel-now" data-panel="now">
+      <div class="panel-head">What now?</div>
+      <div id="screen-now" class="screen now"></div>
+    </section>
+
+    <!-- LIST -->
+    <section class="panel" id="panel-list" data-panel="list">
+      <div class="panel-head">Everything</div>
+      <div id="screen-list" class="screen list"></div>
+    </section>
+
+    <!-- PLAN: calendar + progress -->
+    <section class="panel" id="panel-plan" data-panel="plan">
+      <div class="panel-head">
+        Today's plan
+        <button class="plan-btn" id="plan-day">Plan my day</button>
+      </div>
+      <div id="progress"></div>
+      <div id="calendar"></div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button data-tab="now" aria-current="true"><span class="ti">◎</span>Now</button>
+    <button data-tab="add"><span class="ti">＋</span>Add</button>
+    <button data-tab="list"><span class="ti">☰</span>All</button>
+    <button data-tab="plan"><span class="ti">▦</span>Plan</button>
+  </nav>
+</div>
+
+<div class="sheet-backdrop" id="edit-backdrop">
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="Edit task">
+    <div class="sheet-grip"></div>
+    <h2>Edit</h2>
+
+    <div id="edit-cat-section">
+      <div class="add-lead">Project <span class="lead-note">— client or grouping</span></div>
+      <div class="cat-chooser" id="edit-cat-chooser"></div>
+      <div class="cat-new" id="edit-cat-new" style="display:none">
+        <input type="text" id="edit-cat-input" placeholder="Name the project…" />
+        <button class="step-add-btn" id="edit-cat-confirm" aria-label="create project">＋</button>
+      </div>
+      <div class="add-divider"></div>
+    </div>
+
+    <label class="field-label">Task</label>
+    <textarea id="edit-title" rows="2"></textarea>
+
+    <label class="field-label">When's it due?</label>
+    <div class="seg" id="edit-seg-deadline">
+      <button data-val="none">No deadline</button>
+      <button data-val="today">Today</button>
+      <button data-val="tomorrow">Tomorrow</button>
+      <button data-val="pick">Pick a date</button>
+    </div>
+    <input type="date" id="edit-deadline-date" style="display:none" />
+
+    <label class="field-label">Roughly how long?</label>
+    <div class="seg" id="edit-seg-time">
+      <button data-val="5">5 min</button>
+      <button data-val="15">15 min</button>
+      <button data-val="30">30 min</button>
+      <button data-val="60">1 hr</button>
+      <button data-val="120">2 hr+</button>
+    </div>
+
+    <label class="field-label">How much does it matter?</label>
+    <div class="seg" id="edit-seg-priority">
+      <button data-val="low">Low</button>
+      <button data-val="med">Medium</button>
+      <button data-val="high">High</button>
+    </div>
+
+    <label class="field-label">How do you feel about it?</label>
+    <div class="seg" id="edit-seg-interest">
+      <button data-val="dread">Dread it</button>
+      <button data-val="neutral">Neutral</button>
+      <button data-val="want">Want to</button>
+    </div>
+
+    <div id="edit-steps-section">
+      <label class="field-label">Break it into steps</label>
+      <p class="steps-hint" id="steps-hint">Small steps become their own low-energy tasks. They inherit this task's deadline and priority.</p>
+      <div id="edit-steps"></div>
+      <div class="step-add">
+        <input type="text" id="edit-step-input" placeholder="Add a step and press enter…" />
+        <button class="step-add-btn" id="edit-step-add" aria-label="add step">＋</button>
+      </div>
+    </div>
+
+    <div class="save-bar">
+      <button class="btn btn-danger" id="edit-delete">Delete</button>
+      <button class="btn btn-primary" id="edit-save">Save changes</button>
+    </div>
+    <div class="cancel"><button id="edit-cancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="cat-backdrop">
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="Edit project">
+    <div class="sheet-grip"></div>
+    <h2>Project</h2>
+    <textarea id="cat-name" rows="1" placeholder="Project name"></textarea>
+    <label class="field-label">Colour</label>
+    <div class="swatches" id="cat-swatches"></div>
+    <div class="save-bar">
+      <button class="btn btn-danger" id="cat-delete">Delete project</button>
+      <button class="btn btn-primary" id="cat-save">Save</button>
+    </div>
+    <p class="steps-hint" style="text-align:center;margin-top:10px">Deleting a project keeps its tasks — they just become unfiled.</p>
+    <div class="cancel"><button id="cat-cancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="saved-toast" id="toast">Added</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- storage ----------
+  var KEY = "onething.v1";
+  var state = load();
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (!s.categories) s.categories = []; // migrate older saves
+        return s;
+      }
+    } catch (e) {}
+    return { tasks: [], energy: null, categories: [] }; // energy: { level, at }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  // ---------- categories (top-level organizing layer; not part of the engine) ----------
+  var CAT_COLORS = ["#767cd6", "#6fae8e", "#d0913f", "#c77dae", "#5c9bd1", "#d47f74", "#8a86c9", "#7fa99b"];
+  function catById(id) { return (state.categories || []).find(function (c) { return c.id === id; }); }
+  function createCategory(name) {
+    var c = { id: uid(), name: name, color: CAT_COLORS[state.categories.length % CAT_COLORS.length] };
+    state.categories.push(c); save();
+    return c;
+  }
+  // a step's category comes from its parent task
+  function taskCategoryId(task) {
+    if (task.parentId) { var p = parentOf(task); return p ? p.categoryId || null : null; }
+    return task.categoryId || null;
+  }
+  function categoryOf(task) { return catById(taskCategoryId(task)); }
+
+  // ---------- time helpers ----------
+  var DAY = 86400000;
+  function now() { return Date.now(); }
+  function endOfToday() { var d = new Date(); d.setHours(23, 59, 59, 999); return d.getTime(); }
+  function tomorrowStart() { var d = new Date(); d.setDate(d.getDate() + 1); d.setHours(4, 0, 0, 0); return d.getTime(); }
+  function isoDate(offsetDays) {
+    var d = new Date(); d.setDate(d.getDate() + (offsetDays || 0));
+    return d.toISOString().slice(0, 10);
+  }
+  function deadlineMs(task) {
+    if (!task.deadline) return null;
+    // treat deadline as end of that day, local
+    var d = new Date(task.deadline + "T23:59:59");
+    return d.getTime();
+  }
+
+  // ---------- steps / projects ----------
+  function childrenOf(id) { return state.tasks.filter(function (x) { return x.parentId === id; }); }
+  function hasSteps(task) { return state.tasks.some(function (x) { return x.parentId === task.id; }); }
+  function parentOf(task) {
+    return task.parentId ? state.tasks.find(function (x) { return x.id === task.parentId; }) : null;
+  }
+  // steps inherit the project's deadline & priority so urgency flows down to every chunk
+  function effectiveDeadline(task) {
+    if (task.deadline) return task.deadline;
+    var p = parentOf(task);
+    return p ? p.deadline : null;
+  }
+  function effectivePriority(task) {
+    var p = parentOf(task);
+    return (task.parentId && p) ? p.priority : task.priority;
+  }
+  function stepProgress(id) {
+    var kids = childrenOf(id);
+    var done = kids.filter(function (k) { return k.status === "done"; }).length;
+    return { done: done, total: kids.length };
+  }
+
+  // ---------- decision engine (push-biased) ----------
+  // Deadline wins for standalone tasks. But a broken-down task is different:
+  // its steps inherit the deadline (so the project stays urgent) yet stay small,
+  // so we re-enable energy-matching for steps — the smallest chunk becomes the
+  // low-energy on-ramp into a dreaded project.
+  function urgency(task) {
+    var dm = deadlineMs({ deadline: effectiveDeadline(task) });
+    if (dm == null) return 8;
+    var diff = dm - now();
+    if (diff < 0) return 110;                 // overdue
+    if (dm <= endOfToday()) return 95;        // due today
+    if (diff <= DAY * 1.5) return 72;         // ~tomorrow
+    if (diff <= DAY * 3) return 52;
+    if (diff <= DAY * 7) return 34;
+    return 16;
+  }
+  function priorityScore(p) { return p === "high" ? 34 : p === "low" ? 6 : 16; }
+  function interestScore(i) { return i === "want" ? 12 : i === "dread" ? 0 : 4; }
+
+  function effort(task) {
+    var e = task.estMin != null ? task.estMin : 30;
+    if (task.interest === "dread") e += 20;     // dread feels heavier
+    if (task.interest === "want") e -= 8;
+    return e;
+  }
+  function energyFit(task, level) {
+    var e = effort(task);
+    if (level === "low")  return e <= 15 ? 18 : e <= 30 ? 6 : e <= 60 ? -8 : -18;
+    if (level === "good") return e >= 45 ? 12 : 4;
+    return e <= 45 ? 6 : -4; // okay
+  }
+
+  function score(task, level) {
+    var u = urgency(task);
+    var isStep = !!task.parentId;
+    var s = u + priorityScore(effectivePriority(task)) + interestScore(task.interest);
+    // standalone tasks: push (ignore energy) when due today/overdue.
+    // steps: always energy-matched, since the step itself is the safe on-ramp.
+    if (u < 90 || isStep) s += energyFit(task, level);
+    return s;
+  }
+
+  function candidates() {
+    var t = now();
+    return state.tasks.filter(function (x) {
+      return x.status === "active" && (!x.snoozeUntil || x.snoozeUntil <= t) && !hasSteps(x);
+    });
+  }
+  function ranked(level) {
+    return candidates().slice().sort(function (a, b) { return score(b, level) - score(a, level); });
+  }
+
+  // reason for the pick — transparency builds trust
+  function reason(task, level) {
+    var u = urgency(task), out = [];
+    if (u >= 110) out.push({ cls: "overdue", txt: "Overdue" });
+    else if (u >= 95) out.push({ cls: "deadline", txt: "Due today" });
+    else if (u >= 72) out.push({ cls: "deadline", txt: "Due tomorrow" });
+    else if (u >= 34) out.push({ cls: "deadline", txt: "Deadline coming up" });
+
+    if (effectivePriority(task) === "high") out.push({ cls: "priority", txt: "High priority" });
+
+    var isStep = !!task.parentId;
+    if (u < 90 || isStep) {
+      if (level === "low" && effort(task) <= 15)
+        out.push({ cls: "energy", txt: isStep ? "A small step to start" : "Easy win for low energy" });
+      else if (level === "good" && effort(task) >= 45)
+        out.push({ cls: "energy", txt: "Good match for your energy" });
+    }
+    if (task.interest === "want" && out.length < 2) out.push({ cls: "want", txt: "You wanted to do this" });
+
+    if (!out.length) out.push({ cls: "priority", txt: "Next up" });
+    return out.slice(0, 2);
+  }
+
+  // ---------- rendering ----------
+  var swapIndex = 0;
+  var doingId = null;
+
+  function fmtTime(m) {
+    if (m == null) return null;
+    if (m < 60) return "about " + m + " min";
+    return "about " + (m / 60) + " hr";
+  }
+  function fmtDeadline(task) {
+    var dl = effectiveDeadline(task);
+    if (!dl) return null;
+    var dm = deadlineMs({ deadline: dl }), diff = dm - now();
+    if (diff < 0) return "overdue";
+    if (dm <= endOfToday()) return "due today";
+    if (diff <= DAY * 1.5) return "due tomorrow";
+    var d = new Date(dl + "T00:00:00");
+    return "due " + d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
+  function renderNow() {
+    var el = document.getElementById("screen-now");
+
+    // energy check-in if missing or stale (>3h)
+    var stale = !state.energy || (now() - state.energy.at > 3 * 3600 * 1000);
+    if (stale) { el.innerHTML = energyHtml(); wireEnergy(el); return; }
+
+    var list = ranked(state.energy.level);
+    if (!list.length) { el.innerHTML = emptyHtml(); wireEmpty(el); return; }
+
+    // doing mode
+    if (doingId) {
+      var d = state.tasks.find(function (x) { return x.id === doingId; });
+      if (d) { el.innerHTML = doingHtml(d); wireDoing(el, d); return; }
+      doingId = null;
+    }
+
+    if (swapIndex >= list.length) swapIndex = 0;
+    var task = list[swapIndex];
+    el.innerHTML = focusHtml(task, list.length);
+    wireFocus(el, task);
+  }
+
+  function energyHtml() {
+    return '' +
+      '<div class="energy">' +
+        '<h2>How\'s your energy right now?</h2>' +
+        '<p>This shapes what I hand you.</p>' +
+        '<div class="energy-opts">' +
+          '<button data-lvl="low"><span class="ico">▁</span>Low</button>' +
+          '<button data-lvl="okay"><span class="ico">▄</span>Okay</button>' +
+          '<button data-lvl="good"><span class="ico">█</span>Good</button>' +
+        '</div>' +
+      '</div>';
+  }
+  function focusHtml(task, count) {
+    var rs = reason(task, state.energy.level);
+    var why = rs.map(function (r) { return '<span class="why ' + r.cls + '">' + r.txt + '</span>'; }).join(" ");
+    var chips = [];
+    var dl = fmtDeadline(task); if (dl) chips.push(dl);
+    var tm = fmtTime(task.estMin); if (tm) chips.push(tm);
+    var meta = chips.map(function (c) { return '<span class="chip">' + esc(c) + '</span>'; }).join("");
+    var swap = count > 1
+      ? '<button class="btn btn-ghost" data-act="swap">Show me another</button>'
+      : '';
+    var context = "";
+    var cat = categoryOf(task);
+    var p = parentOf(task);
+    if (cat || p) {
+      var parts = [];
+      if (cat) parts.push('<span class="cat-tag"><span class="cdot" style="background:' + cat.color + '"></span>' + esc(cat.name) + '</span>');
+      if (p) {
+        var pr = stepProgress(p.id);
+        parts.push('a step in <strong>' + esc(p.title) + '</strong> · ' + pr.done + ' of ' + pr.total + ' done');
+      }
+      context = '<div class="part-of">' + parts.join(" · ") + '</div>';
+    }
+    return '' +
+      '<div class="focus-card">' +
+        context +
+        '<div>' + why + '</div>' +
+        '<h1 class="task-title">' + esc(task.title) + '</h1>' +
+        (meta ? '<div class="meta">' + meta + '</div>' : '<div style="height:8px"></div>') +
+        '<div class="actions">' +
+          '<button class="btn btn-primary" data-act="do">I\'ll do this</button>' +
+          '<div class="btn-row">' +
+            swap +
+            '<button class="btn btn-ghost" data-act="later">Not now</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="recheck"><button data-act="recheck">energy changed?</button></div>';
+  }
+  function doingHtml(task) {
+    return '' +
+      '<div class="focus-card doing">' +
+        '<div><span class="why energy">On it</span></div>' +
+        '<h1 class="task-title">' + esc(task.title) + '</h1>' +
+        '<p class="doing-note">No rush. Mark it done when you\'re done.</p>' +
+        '<div class="actions">' +
+          '<button class="btn btn-primary" data-act="done">Done ✓</button>' +
+          '<button class="btn btn-ghost" data-act="back">Back to picking</button>' +
+        '</div>' +
+      '</div>';
+  }
+  function emptyHtml() {
+    var anySnoozed = state.tasks.some(function (x) { return x.status === "active" && x.snoozeUntil > now(); });
+    var anyActive = state.tasks.some(function (x) { return x.status === "active"; });
+    var msg = !anyActive
+      ? { big: "Nothing in the pile", sub: "Add what's rattling around in your head and I'll pick for you." }
+      : anySnoozed
+        ? { big: "All clear for now", sub: "Everything left is tucked away until tomorrow. Rest or add something new." }
+        : { big: "You're caught up", sub: "Nice. Add the next thing whenever you're ready." };
+    return '' +
+      '<div class="empty">' +
+        '<div class="big">' + msg.big + '</div>' +
+        '<div>' + msg.sub + '</div>' +
+        '<button class="btn btn-primary" data-act="goadd">Add something</button>' +
+      '</div>';
+  }
+
+  function wireEnergy(el) {
+    el.querySelectorAll("[data-lvl]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        state.energy = { level: b.dataset.lvl, at: now() };
+        swapIndex = 0; save(); renderNow();
+      });
+    });
+  }
+  // marking done — if this was the last open step, the project completes itself
+  function completeTask(task) {
+    task.status = "done"; task.doneAt = now();
+    var p = parentOf(task);
+    if (p && p.status !== "done") {
+      var openLeft = childrenOf(p.id).some(function (k) { return k.status !== "done"; });
+      if (!openLeft) {
+        p.status = "done"; p.doneAt = now();
+        setTimeout(function () { toast("🎉 " + p.title + " — done!"); }, 350);
+      }
+    }
+  }
+  function uncompleteTask(task) {
+    task.status = "active"; task.doneAt = null;
+    var p = parentOf(task);
+    if (p && p.status === "done") { p.status = "active"; p.doneAt = null; } // reopening a step reopens the project
+  }
+
+  function wireFocus(el, task) {
+    el.querySelector('[data-act="do"]').addEventListener("click", function () {
+      doingId = task.id; renderNow();
+    });
+    var sw = el.querySelector('[data-act="swap"]');
+    if (sw) sw.addEventListener("click", function () { swapIndex++; renderNow(); });
+    el.querySelector('[data-act="later"]').addEventListener("click", function () {
+      task.snoozeUntil = tomorrowStart(); swapIndex = 0; save(); refresh();
+    });
+    el.querySelector('[data-act="recheck"]').addEventListener("click", function () {
+      state.energy = null; save(); renderNow();
+    });
+  }
+  function wireDoing(el, task) {
+    el.querySelector('[data-act="done"]').addEventListener("click", function () {
+      completeTask(task); doingId = null; swapIndex = 0; save(); refresh();
+    });
+    el.querySelector('[data-act="back"]').addEventListener("click", function () {
+      doingId = null; renderNow();
+    });
+  }
+  function wireEmpty(el) {
+    var b = el.querySelector('[data-act="goadd"]');
+    if (b) b.addEventListener("click", function () { focusAdd(); });
+  }
+
+  // ---------- ADD ----------
+  var draft = { deadline: "none", date: "", time: "15", priority: "med", interest: "neutral", categoryId: null };
+
+  function wireSeg(id, key, target, onchange) {
+    document.getElementById(id).querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        this.parentNode.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        this.setAttribute("aria-pressed", "true");
+        target[key] = this.dataset.val;
+        if (onchange) onchange(this.dataset.val);
+      });
+    });
+  }
+  wireSeg("seg-deadline", "deadline", draft, function (v) {
+    document.getElementById("deadline-date").style.display = v === "pick" ? "inline-block" : "none";
+  });
+  wireSeg("seg-time", "time", draft);
+  wireSeg("seg-priority", "priority", draft);
+  wireSeg("seg-interest", "interest", draft);
+  document.getElementById("deadline-date").addEventListener("change", function () { draft.date = this.value; });
+
+  // turn a deadline draft ({deadline, date}) into a stored ISO date or null
+  function mapDeadline(d) {
+    if (d.deadline === "today") return isoDate(0);
+    if (d.deadline === "tomorrow") return isoDate(1);
+    if (d.deadline === "week") return isoDate(7);
+    if (d.deadline === "pick" && d.date) return d.date;
+    return null;
+  }
+
+  document.getElementById("save-task").addEventListener("click", function () {
+    var ta = document.getElementById("title");
+    var title = ta.value.trim();
+    if (!title) { ta.focus(); ta.style.borderColor = "var(--coral)"; return; }
+
+    var deadline = mapDeadline(draft);
+
+    state.tasks.push({
+      id: uid(), title: title, parentId: null, categoryId: draft.categoryId || null, deadline: deadline, scheduledAt: null,
+      estMin: parseInt(draft.time, 10), priority: draft.priority, interest: draft.interest,
+      status: "active", snoozeUntil: null, createdAt: now(), doneAt: null
+    });
+    save();
+
+    // reset
+    ta.value = ""; ta.style.borderColor = "";
+    resetDraft();
+    toast("Added to the pile");
+  });
+
+  function resetDraft() {
+    draft.deadline = "none"; draft.date = ""; draft.time = "15";
+    draft.priority = "med"; draft.interest = "neutral"; draft.categoryId = null;
+    setPressed("seg-deadline", "none"); setPressed("seg-time", "15");
+    setPressed("seg-priority", "med"); setPressed("seg-interest", "neutral");
+    document.getElementById("deadline-date").style.display = "none";
+    document.getElementById("deadline-date").value = "";
+    document.getElementById("add-cat-new").style.display = "none";
+    addCatChooser.render();
+  }
+  function setPressed(id, val) {
+    document.getElementById(id).querySelectorAll("button").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.dataset.val === val ? "true" : "false");
+    });
+  }
+
+  // ----- category chooser (shared by Add and Edit) -----
+  function makeCatChooser(cfg) {
+    var chooserEl = document.getElementById(cfg.chooser);
+    var newRow = document.getElementById(cfg.newRow);
+    var input = document.getElementById(cfg.input);
+    function render() {
+      var sel = cfg.target.categoryId || null;
+      var cats = state.categories || [];
+      var html = '<button type="button" class="cat-chip' + (!sel ? " on" : "") + '" data-cat="">No project</button>';
+      html += cats.map(function (c) {
+        return '<button type="button" class="cat-chip' + (sel === c.id ? " on" : "") + '" data-cat="' + c.id + '">' +
+               '<span class="cdot" style="background:' + c.color + '"></span>' + esc(c.name) + '</button>';
+      }).join("");
+      html += '<button type="button" class="cat-chip newchip" data-catnew="1">＋ New</button>';
+      chooserEl.innerHTML = html;
+      chooserEl.querySelectorAll("[data-cat]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          cfg.target.categoryId = b.dataset.cat || null;
+          newRow.style.display = "none"; render();
+        });
+      });
+      chooserEl.querySelector("[data-catnew]").addEventListener("click", function () {
+        newRow.style.display = "flex"; input.value = ""; input.focus();
+      });
+    }
+    function confirmNew() {
+      var name = input.value.trim(); if (!name) return;
+      var c = createCategory(name);
+      cfg.target.categoryId = c.id;
+      newRow.style.display = "none"; render();
+    }
+    document.getElementById(cfg.confirm).addEventListener("click", confirmNew);
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); confirmNew(); } });
+    return { render: render };
+  }
+  var addCatChooser = makeCatChooser({ chooser: "add-cat-chooser", newRow: "add-cat-new", input: "add-cat-input", confirm: "add-cat-confirm", target: draft });
+  addCatChooser.render();
+
+  // ---------- EDIT ----------
+  var editId = null;
+  var editDraft = { deadline: "none", date: "", time: "15", priority: "med", interest: "neutral", categoryId: null };
+
+  wireSeg("edit-seg-deadline", "deadline", editDraft, function (v) {
+    document.getElementById("edit-deadline-date").style.display = v === "pick" ? "inline-block" : "none";
+  });
+  wireSeg("edit-seg-time", "time", editDraft);
+  wireSeg("edit-seg-priority", "priority", editDraft);
+  wireSeg("edit-seg-interest", "interest", editDraft);
+  document.getElementById("edit-deadline-date").addEventListener("change", function () { editDraft.date = this.value; });
+  var editCatChooser = makeCatChooser({ chooser: "edit-cat-chooser", newRow: "edit-cat-new", input: "edit-cat-input", confirm: "edit-cat-confirm", target: editDraft });
+
+  function openEdit(task) {
+    editId = task.id;
+    document.getElementById("edit-title").value = task.title;
+
+    // reverse-map stored deadline: today/tomorrow stay as chips, any other date shows in the picker
+    var dv = "none", dateVal = "";
+    if (task.deadline) {
+      if (task.deadline === isoDate(0)) dv = "today";
+      else if (task.deadline === isoDate(1)) dv = "tomorrow";
+      else { dv = "pick"; dateVal = task.deadline; }
+    }
+    editDraft.deadline = dv; editDraft.date = dateVal;
+    editDraft.time = String(task.estMin != null ? task.estMin : 15);
+    editDraft.priority = task.priority; editDraft.interest = task.interest;
+    editDraft.categoryId = task.categoryId || null;
+
+    setPressed("edit-seg-deadline", dv);
+    setPressed("edit-seg-time", editDraft.time);
+    setPressed("edit-seg-priority", task.priority);
+    setPressed("edit-seg-interest", task.interest);
+    var dateEl = document.getElementById("edit-deadline-date");
+    dateEl.value = dateVal;
+    dateEl.style.display = dv === "pick" ? "inline-block" : "none";
+
+    // steps belong to a task, so only top-level tasks get a Project field
+    var catSection = document.getElementById("edit-cat-section");
+    catSection.style.display = task.parentId ? "none" : "";
+    document.getElementById("edit-cat-new").style.display = "none";
+    if (!task.parentId) editCatChooser.render();
+
+    renderEditSteps();
+    document.getElementById("edit-step-input").value = "";
+    document.getElementById("edit-backdrop").classList.add("open");
+  }
+
+  // ----- steps inside the editor (changes apply immediately) -----
+  var STEP_TIMES = [5, 15, 30, 60, 120];
+  function stepTimeLabel(m) { return m < 60 ? m + "m" : (m / 60) + "h"; }
+  function renderEditSteps() {
+    var editing = state.tasks.find(function (x) { return x.id === editId; });
+    var kids = childrenOf(editId);
+    var hint = document.getElementById("steps-hint");
+    // don't allow steps on something that is itself a step (one level deep)
+    var section = document.getElementById("edit-steps-section");
+    if (editing && editing.parentId) { section.style.display = "none"; return; }
+    section.style.display = "";
+    hint.textContent = kids.length
+      ? "One Thing hands you these steps instead of the whole thing — smallest first when you're low."
+      : "Small steps become their own low-energy tasks. They inherit this task's deadline and priority.";
+
+    var wrap = document.getElementById("edit-steps");
+    wrap.innerHTML = kids.map(function (s) {
+      var opts = STEP_TIMES.map(function (m) {
+        return '<option value="' + m + '"' + (s.estMin === m ? " selected" : "") + '>' + stepTimeLabel(m) + '</option>';
+      }).join("");
+      return '' +
+        '<div class="step-edit' + (s.status === "done" ? " done" : "") + '">' +
+          '<span class="dot">•</span>' +
+          '<span class="st">' + esc(s.title) + '</span>' +
+          '<select class="step-time" data-steptime="' + s.id + '">' + opts + '</select>' +
+          '<button class="del" data-stepdel="' + s.id + '" aria-label="remove step">×</button>' +
+        '</div>';
+    }).join("");
+
+    wrap.querySelectorAll("[data-stepdel]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        state.tasks = state.tasks.filter(function (x) { return x.id !== b.dataset.stepdel; });
+        save(); renderEditSteps();
+      });
+    });
+    wrap.querySelectorAll("[data-steptime]").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var s = state.tasks.find(function (x) { return x.id === sel.dataset.steptime; });
+        if (s) { s.estMin = parseInt(sel.value, 10); save(); }
+      });
+    });
+  }
+  function addStep() {
+    var input = document.getElementById("edit-step-input");
+    var title = input.value.trim();
+    if (!title || !editId) return;
+    state.tasks.push({
+      id: uid(), title: title, parentId: editId, scheduledAt: null,
+      deadline: null, estMin: 15, priority: "med", interest: "neutral",
+      status: "active", snoozeUntil: null, createdAt: now(), doneAt: null
+    });
+    save();
+    input.value = "";
+    renderEditSteps();
+    input.focus();
+  }
+  document.getElementById("edit-step-add").addEventListener("click", addStep);
+  document.getElementById("edit-step-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); addStep(); }
+  });
+  function closeEdit() {
+    document.getElementById("edit-backdrop").classList.remove("open");
+    editId = null;
+  }
+  document.getElementById("edit-save").addEventListener("click", function () {
+    var t = state.tasks.find(function (x) { return x.id === editId; });
+    if (!t) return closeEdit();
+    var ta = document.getElementById("edit-title");
+    var title = ta.value.trim();
+    if (!title) { ta.focus(); ta.style.borderColor = "var(--coral)"; return; }
+    ta.style.borderColor = "";
+    t.title = title;
+    t.deadline = mapDeadline(editDraft);
+    t.estMin = parseInt(editDraft.time, 10);
+    t.priority = editDraft.priority;
+    t.interest = editDraft.interest;
+    if (!t.parentId) t.categoryId = editDraft.categoryId || null;
+    save(); closeEdit(); refresh();
+    toast("Saved");
+  });
+  document.getElementById("edit-delete").addEventListener("click", function () {
+    var id = editId;
+    state.tasks = state.tasks.filter(function (x) { return x.id !== id && x.parentId !== id; });
+    save(); closeEdit(); refresh();
+    toast("Deleted");
+  });
+  document.getElementById("edit-cancel").addEventListener("click", closeEdit);
+  document.getElementById("edit-backdrop").addEventListener("click", function (e) {
+    if (e.target === this) closeEdit();
+  });
+
+  // ----- category editor sheet -----
+  var catEditId = null;
+  function openCatEditor(id) {
+    var c = catById(id); if (!c) return;
+    catEditId = id;
+    document.getElementById("cat-name").value = c.name;
+    var sw = document.getElementById("cat-swatches");
+    sw.innerHTML = CAT_COLORS.map(function (col) {
+      return '<button type="button" class="swatch' + (col === c.color ? " on" : "") + '" data-color="' + col + '" style="background:' + col + '" aria-label="colour"></button>';
+    }).join("");
+    sw.querySelectorAll("[data-color]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        sw.querySelectorAll(".swatch").forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+      });
+    });
+    document.getElementById("cat-backdrop").classList.add("open");
+  }
+  function closeCatEditor() {
+    document.getElementById("cat-backdrop").classList.remove("open");
+    catEditId = null;
+  }
+  document.getElementById("cat-save").addEventListener("click", function () {
+    var c = catById(catEditId); if (!c) return closeCatEditor();
+    var name = document.getElementById("cat-name").value.trim();
+    if (name) c.name = name;
+    var on = document.querySelector("#cat-swatches .swatch.on");
+    if (on) c.color = on.dataset.color;
+    save(); closeCatEditor(); refresh();
+  });
+  document.getElementById("cat-delete").addEventListener("click", function () {
+    var id = catEditId;
+    // keep the tasks — just unfile them
+    state.tasks.forEach(function (t) { if (t.categoryId === id) t.categoryId = null; });
+    state.categories = state.categories.filter(function (c) { return c.id !== id; });
+    save(); closeCatEditor(); refresh();
+    toast("Project deleted");
+  });
+  document.getElementById("cat-cancel").addEventListener("click", closeCatEditor);
+  document.getElementById("cat-backdrop").addEventListener("click", function (e) {
+    if (e.target === this) closeCatEditor();
+  });
+
+  var toastTimer;
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1800);
+  }
+
+  // ---------- LIST ----------
+  function renderList() {
+    var el = document.getElementById("screen-list");
+    var openTasks = [], doneTasks = [];
+    state.tasks.forEach(function (t) {
+      if (t.parentId) return; // steps render under their task
+      (t.status === "done" ? doneTasks : openTasks).push(t);
+    });
+    doneTasks.sort(function (a, b) { return (b.doneAt || 0) - (a.doneAt || 0); });
+
+    var html = '<h2>Everything</h2>';
+    if (!state.tasks.length) {
+      html += '<div class="empty" style="padding-top:30px"><div>Nothing here yet. Head to Add to start the pile.</div></div>';
+    }
+
+    var cats = state.categories || [];
+    cats.forEach(function (c) {
+      var arr = openTasks.filter(function (t) { return t.categoryId === c.id; });
+      if (arr.length) html += catHeader(c) + renderTasks(arr);
+    });
+    var uncat = openTasks.filter(function (t) { return !t.categoryId || !catById(t.categoryId); });
+    if (uncat.length) {
+      if (cats.length) html += '<div class="cat-header plain"><span class="cname">No project</span></div>';
+      html += renderTasks(uncat);
+    }
+    if (doneTasks.length) {
+      html += '<div class="list-group-label">Done</div>' + renderTasks(doneTasks);
+    }
+    el.innerHTML = html;
+
+    el.querySelectorAll("[data-del]").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var id = b.dataset.del;
+        state.tasks = state.tasks.filter(function (x) { return x.id !== id && x.parentId !== id; });
+        save(); refresh();
+      });
+    });
+    el.querySelectorAll("[data-toggle]").forEach(function (c) {
+      c.addEventListener("click", function () {
+        var t = state.tasks.find(function (x) { return x.id === c.dataset.toggle; });
+        if (!t) return;
+        if (t.status === "done") uncompleteTask(t); else completeTask(t);
+        save(); refresh();
+      });
+    });
+    el.querySelectorAll("[data-edit]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var t = state.tasks.find(function (x) { return x.id === b.dataset.edit; });
+        if (t) openEdit(t);
+      });
+    });
+    el.querySelectorAll("[data-catedit]").forEach(function (b) {
+      b.addEventListener("click", function () { openCatEditor(b.dataset.catedit); });
+    });
+    el.querySelectorAll("[data-sched]").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        startScheduling(b.dataset.sched);
+      });
+    });
+  }
+  function catHeader(c) {
+    return '<button class="cat-header" data-catedit="' + c.id + '">' +
+             '<span class="cdot" style="background:' + c.color + '"></span>' +
+             '<span class="cname">' + esc(c.name) + '</span>' +
+             '<span class="cedit">edit</span>' +
+           '</button>';
+  }
+  function renderTasks(arr) {
+    return arr.map(function (t) { return hasSteps(t) ? projectBlock(t) : standaloneItem(t); }).join("");
+  }
+
+  function bitsFor(t) {
+    var bits = [];
+    var dl = fmtDeadline(t); if (dl) bits.push(dl);
+    var tm = fmtTime(t.estMin); if (tm) bits.push(tm);
+    if (effectivePriority(t) === "high") bits.push("high priority");
+    if (isScheduledToday(t)) bits.push('<span class="sched-tag">at ' + hhmm(t.scheduledAt) + '</span>');
+    if (t.snoozeUntil && t.snoozeUntil > now()) bits.push('<span class="snoozed-note">back tomorrow</span>');
+    return bits;
+  }
+  // a clock button for anything schedulable that isn't already placed today
+  function schedBtn(t) {
+    if (t.status === "done" || isScheduledToday(t)) return "";
+    return '<button class="sched" data-sched="' + t.id + '" aria-label="schedule">🕘</button>';
+  }
+  function standaloneItem(t) {
+    var isDone = t.status === "done";
+    var bits = bitsFor(t);
+    var picking = schedulingId === t.id ? " picking" : "";
+    return '' +
+      '<div class="item' + (isDone ? " done" : "") + picking + '">' +
+        '<button class="check" data-toggle="' + t.id + '" aria-label="toggle done"></button>' +
+        '<button class="body" data-edit="' + t.id + '" aria-label="edit task"><div class="t">' + esc(t.title) + '</div>' +
+          (bits.length ? '<div class="sub">' + bits.join(" · ") + '</div>' : '') +
+        '</button>' +
+        schedBtn(t) +
+        '<button class="del" data-del="' + t.id + '" aria-label="delete">×</button>' +
+      '</div>';
+  }
+  function stepRow(step) {
+    var isDone = step.status === "done";
+    var snoozed = step.snoozeUntil && step.snoozeUntil > now();
+    var picking = schedulingId === step.id ? " picking" : "";
+    var bits = [];
+    var tm = fmtTime(step.estMin); if (tm) bits.push(tm);
+    if (isScheduledToday(step)) bits.push('<span class="sched-tag">at ' + hhmm(step.scheduledAt) + '</span>');
+    if (snoozed) bits.push('<span class="snoozed-note">back tomorrow</span>');
+    return '' +
+      '<div class="item step' + (isDone ? " done" : "") + picking + '">' +
+        '<button class="check" data-toggle="' + step.id + '" aria-label="toggle done"></button>' +
+        '<button class="body" data-edit="' + step.id + '" aria-label="edit step"><div class="t">' + esc(step.title) + '</div>' +
+          (bits.length ? '<div class="sub">' + bits.join(" · ") + '</div>' : '') +
+        '</button>' +
+        '<button class="del" data-del="' + step.id + '" aria-label="delete step">×</button>' +
+      '</div>';
+  }
+  function projectBlock(t) {
+    var pr = stepProgress(t.id);
+    var isDone = t.status === "done";
+    var bits = [];
+    var dl = fmtDeadline(t); if (dl) bits.push(dl);
+    if (t.priority === "high") bits.push("high priority");
+    var pct = pr.total ? Math.round(pr.done / pr.total * 100) : 0;
+    var sub = pr.done + ' of ' + pr.total + ' steps' + (bits.length ? ' · ' + bits.join(" · ") : "");
+    var head = '' +
+      '<div class="item project' + (isDone ? " done" : "") + '">' +
+        '<span class="proj-badge" aria-hidden="true">▤</span>' +
+        '<button class="body" data-edit="' + t.id + '" aria-label="edit task"><div class="t">' + esc(t.title) + '</div>' +
+          '<div class="sub">' + sub + '</div>' +
+          '<div class="progress"><span style="width:' + pct + '%"></span></div>' +
+        '</button>' +
+        '<button class="del" data-del="' + t.id + '" aria-label="delete task">×</button>' +
+      '</div>';
+    var steps = childrenOf(t.id).map(stepRow).join("");
+    return '<div class="project-wrap">' + head + steps + '</div>';
+  }
+
+  // ---------- tabs ----------
+  // ---------- scheduling / calendar ----------
+  var START_HOUR = 7, END_HOUR = 22, PX_PER_MIN = 0.8;
+  var schedulingId = null;
+
+  function startOfToday() { var d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); }
+  function isScheduledToday(t) { return t.scheduledAt && t.scheduledAt >= startOfToday() && t.scheduledAt < startOfToday() + DAY; }
+  function hhmm(ms) { var d = new Date(ms), h = d.getHours(), m = d.getMinutes(), ap = h < 12 ? "am" : "pm", h12 = ((h + 11) % 12) + 1; return h12 + (m ? ":" + String(m).padStart(2, "0") : "") + ap; }
+  function hourLabel(h) { var ap = h < 12 ? "am" : "pm", h12 = ((h + 11) % 12) + 1; return h12 + ap; }
+  function minutesOfDay(ms) { var d = new Date(ms); return d.getHours() * 60 + d.getMinutes(); }
+  function fmtDur(m) { if (!m) return "0m"; if (m < 60) return m + "m"; var h = Math.floor(m / 60), mm = m % 60; return h + "h" + (mm ? " " + mm + "m" : ""); }
+  function schedulable(t) { return t.status !== "done" && !hasSteps(t); } // steps + childless tasks are the doable units
+  function unscheduledSchedulable() { return state.tasks.filter(function (t) { return schedulable(t) && !isScheduledToday(t); }); }
+  function scheduledTodayItems() { return state.tasks.filter(function (t) { return isScheduledToday(t); }); }
+
+  function switchTabIfMobile(name) {
+    if (window.matchMedia && window.matchMedia("(max-width: 859px)").matches) switchTab(name);
+  }
+  function startScheduling(id) {
+    schedulingId = (schedulingId === id) ? null : id;
+    renderList(); renderCalendar();
+    if (schedulingId) switchTabIfMobile("plan"); // on a phone, hop to the calendar to place it
+  }
+  function placeAt(id, minute) {
+    var t = state.tasks.find(function (x) { return x.id === id; });
+    if (!t) return;
+    minute = Math.max(START_HOUR * 60, Math.min(minute, END_HOUR * 60 - 5));
+    var d = new Date(); d.setHours(0, 0, 0, 0); d.setMinutes(minute);
+    t.scheduledAt = d.getTime();
+    schedulingId = null; save(); refresh();
+  }
+  function unschedule(id) {
+    var t = state.tasks.find(function (x) { return x.id === id; });
+    if (t) { t.scheduledAt = null; save(); refresh(); }
+  }
+
+  // auto-plan: order unscheduled tasks by the engine, then pack them onto the day
+  function planMyDay() {
+    var level = (state.energy && state.energy.level) || "okay";
+    var items = unscheduledSchedulable().slice().sort(function (a, b) { return score(b, level) - score(a, level); });
+    if (!items.length) { toast("Nothing left to schedule"); return; }
+    var nowMin = minutesOfDay(now());
+    var cursor = Math.max(START_HOUR * 60, Math.ceil(nowMin / 5) * 5);
+    var taken = scheduledTodayItems().map(function (t) { return { s: minutesOfDay(t.scheduledAt), e: minutesOfDay(t.scheduledAt) + (t.estMin || 30) }; });
+    function overlaps(s, e) { return taken.some(function (b) { return s < b.e && e > b.s; }); }
+    items.forEach(function (t) {
+      var dur = t.estMin || 30;
+      while (cursor + dur <= END_HOUR * 60 && overlaps(cursor, cursor + dur)) cursor += 5;
+      if (cursor + dur > END_HOUR * 60) return; // day is full — leave the rest unscheduled
+      var d = new Date(); d.setHours(0, 0, 0, 0); d.setMinutes(cursor);
+      t.scheduledAt = d.getTime();
+      taken.push({ s: cursor, e: cursor + dur });
+      cursor += dur;
+    });
+    save(); refresh(); toast("Planned your day");
+  }
+
+  function renderCalendar() {
+    var el = document.getElementById("calendar");
+    var totalMin = (END_HOUR - START_HOUR) * 60;
+    var height = totalMin * PX_PER_MIN;
+    var hint = schedulingId ? '<div class="sched-hint">▹ Now click a time to drop it in</div>' : '';
+
+    var hours = "";
+    for (var h = START_HOUR; h < END_HOUR; h++) {
+      hours += '<div class="cal-hour" style="height:' + (60 * PX_PER_MIN) + 'px"><span class="hlabel">' + hourLabel(h) + '</span></div>';
+    }
+
+    // simple lane-packing for overlapping blocks
+    var items = scheduledTodayItems().slice().sort(function (a, b) { return a.scheduledAt - b.scheduledAt; });
+    var lanes = [];
+    var placed = items.map(function (t) {
+      var s = minutesOfDay(t.scheduledAt), e = s + Math.max(t.estMin || 30, 15), lane = 0;
+      while (lane < lanes.length && lanes[lane] > s) lane++;
+      lanes[lane] = e;
+      return { t: t, s: s, e: e, lane: lane };
+    });
+    var laneCount = Math.max(1, lanes.length);
+    var blocks = placed.map(function (p) {
+      var top = (p.s - START_HOUR * 60) * PX_PER_MIN;
+      var hgt = Math.max((p.e - p.s) * PX_PER_MIN, 22);
+      var w = 100 / laneCount;
+      var cat = categoryOf(p.t);
+      var style = 'top:' + top + 'px;height:' + hgt + 'px;left:' + (p.lane * w) + '%;width:calc(' + w + '% - 4px);';
+      if (cat) style += 'border-left-color:' + cat.color + ';';
+      return '<div class="cal-block' + (p.t.status === "done" ? " done" : "") + '" style="' + style + '" data-block="' + p.t.id + '">' +
+               '<div class="cb-actions">' +
+                 '<button data-blockdone="' + p.t.id + '" aria-label="done">✓</button>' +
+                 '<button data-blockdel="' + p.t.id + '" aria-label="unschedule">×</button>' +
+               '</div>' +
+               '<div class="cb-title">' + esc(p.t.title) + '</div>' +
+               '<div class="cb-time">' + hhmm(p.t.scheduledAt) + '</div>' +
+             '</div>';
+    }).join("");
+
+    var nowMin = minutesOfDay(now());
+    var nowLine = (nowMin >= START_HOUR * 60 && nowMin <= END_HOUR * 60)
+      ? '<div class="cal-now" style="top:' + ((nowMin - START_HOUR * 60) * PX_PER_MIN) + 'px"></div>' : '';
+
+    el.innerHTML = hint +
+      '<div class="cal-wrap" style="height:' + height + 'px">' +
+        '<div class="cal-day' + (schedulingId ? " placing" : "") + '" style="height:' + height + 'px">' + hours + '</div>' +
+        '<div class="cal-blocks">' + blocks + '</div>' + nowLine +
+      '</div>' +
+      (items.length ? "" : '<div class="cal-empty">Nothing scheduled yet. Tap 🕘 on a task, or hit “Plan my day”.</div>');
+
+    var day = el.querySelector(".cal-day");
+    if (day) {
+      day.addEventListener("click", function (e) {
+        if (!schedulingId) return;
+        var rect = day.getBoundingClientRect();
+        var minute = START_HOUR * 60 + Math.round(((e.clientY - rect.top) / PX_PER_MIN) / 5) * 5;
+        placeAt(schedulingId, minute);
+      });
+    }
+    el.querySelectorAll("[data-blockdone]").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var t = state.tasks.find(function (x) { return x.id === b.dataset.blockdone; });
+        if (t) { if (t.status === "done") uncompleteTask(t); else completeTask(t); save(); refresh(); }
+      });
+    });
+    el.querySelectorAll("[data-blockdel]").forEach(function (b) {
+      b.addEventListener("click", function (e) { e.stopPropagation(); unschedule(b.dataset.blockdel); });
+    });
+    el.querySelectorAll("[data-block]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var t = state.tasks.find(function (x) { return x.id === b.dataset.block; });
+        if (t) openEdit(t);
+      });
+    });
+  }
+
+  function renderProgress() {
+    var el = document.getElementById("progress");
+    var t0 = startOfToday();
+    var doneToday = state.tasks.filter(function (t) { return t.status === "done" && t.doneAt && t.doneAt >= t0 && !hasSteps(t); }).length;
+    var openCount = state.tasks.filter(schedulable).length;
+    var totalTouched = doneToday + openCount;
+    var pctDone = totalTouched ? Math.round(doneToday / totalTouched * 100) : 0;
+
+    var sched = scheduledTodayItems();
+    var schedDone = sched.filter(function (t) { return t.status === "done"; }).length;
+    var plannedMin = sched.filter(function (t) { return t.status !== "done"; }).reduce(function (a, t) { return a + (t.estMin || 0); }, 0);
+    var pctPlan = sched.length ? Math.round(schedDone / sched.length * 100) : 0;
+
+    el.innerHTML =
+      '<div class="progress-panel">' +
+        '<div class="prog-stats">' +
+          '<div class="prog-card"><div class="prog-num">' + doneToday + '</div><div class="prog-label">done today</div></div>' +
+          '<div class="prog-card"><div class="prog-num">' + fmtDur(plannedMin) + '</div><div class="prog-label">still planned</div></div>' +
+        '</div>' +
+        '<div class="prog-bar"><span style="width:' + pctDone + '%"></span></div>' +
+        (sched.length ? '<div class="prog-label" style="margin-top:8px">' + schedDone + ' of ' + sched.length + ' scheduled done · ' + pctPlan + '%</div>' : '') +
+      '</div>';
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll(".panel").forEach(function (s) { s.classList.remove("active"); });
+    var panel = document.getElementById("panel-" + name);
+    if (panel) panel.classList.add("active");
+    document.querySelectorAll("nav.tabs button").forEach(function (b) {
+      b.setAttribute("aria-current", b.dataset.tab === name ? "true" : "false");
+    });
+    if (name === "now") { swapIndex = 0; renderNow(); }
+    if (name === "add") addCatChooser.render();
+    if (name === "list") renderList();
+    if (name === "plan") { renderCalendar(); renderProgress(); }
+  }
+  document.querySelectorAll("nav.tabs button").forEach(function (b) {
+    b.addEventListener("click", function () { switchTab(b.dataset.tab); });
+  });
+  function focusAdd() {
+    switchTab("add");
+    var t = document.getElementById("title");
+    if (t) t.focus();
+  }
+
+  // re-render every live surface after a state change (dashboard shows them all at once)
+  function refresh() {
+    renderNow(); renderList(); renderCalendar(); renderProgress();
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // ---------- boot ----------
+  refresh();
+  document.getElementById("plan-day").addEventListener("click", planMyDay);
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -422,17 +422,24 @@
     cursor: pointer;
   }
   .cat-header.plain { pointer-events: none; }
-  .cat-header .chev { color: var(--muted); font-size: 11px; width: 12px; flex: none; }
+  .cat-header .chev { color: var(--muted); width: 12px; flex: none; }
+  .chev { display: inline-flex; align-items: center; }
+  .chev svg { display: block; transition: transform .15s ease; }
+  .chev.open svg { transform: rotate(90deg); }
   .cat-header .cname { font-family: var(--font-display); font-weight: 600; font-size: 16px; letter-spacing: -.01em; color: var(--ink); flex: 1; }
   .cat-header .ccount { font-family: var(--font-body); font-weight: 500; font-size: 12.5px; color: var(--muted); }
   .cat-header .cdot { width: 11px; height: 11px; }
   .cat-header .cedit { font-size: 12px; color: var(--muted); opacity: .55; transition: opacity .12s; background: none; border: none; cursor: pointer; }
   .cat-header:hover .cedit { opacity: 1; }
   .item.project .chev-btn {
-    flex: none; background: none; border: none; color: var(--accent); font-size: 12px;
-    width: 22px; padding: 0; margin-top: 1px; cursor: pointer; text-align: center;
+    flex: none; background: none; border: none; color: var(--accent);
+    width: 22px; padding: 0; margin-top: 1px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
   }
   .item.project .chev-btn:hover { color: var(--accent-deep); }
+  .energy-opts .ico { display: flex; justify-content: center; margin-bottom: 4px; }
+  .sched svg, .sched-hint svg { display: block; }
+  nav.tabs .ti svg { display: block; }
 
   .swatches { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
   .swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
@@ -602,6 +609,16 @@
           <button data-val="dread">Dread it</button>
           <button data-val="neutral" aria-pressed="true">Neutral</button>
           <button data-val="want">Want to</button>
+        </div>
+
+        <div id="add-steps-section">
+          <label class="field-label">Break it into steps <span class="lead-note">— optional</span></label>
+          <p class="steps-hint">Add small steps and One Thing will hand you those instead of the whole task — smallest first when you're low.</p>
+          <div id="add-steps"></div>
+          <div class="step-add">
+            <input type="text" id="add-step-input" placeholder="Add a step and press enter…" />
+            <button class="step-add-btn" id="add-step-add" aria-label="add step">+</button>
+          </div>
         </div>
 
         <div class="save-bar">
@@ -1095,11 +1112,20 @@
     if (!title) { ta.focus(); ta.style.borderColor = "var(--coral)"; return; }
 
     var deadline = mapDeadline(draft);
+    var pid = uid();
 
     state.tasks.push({
-      id: uid(), title: title, parentId: null, categoryId: draft.categoryId || null, deadline: deadline, scheduledAt: null,
+      id: pid, title: title, parentId: null, categoryId: draft.categoryId || null, deadline: deadline, scheduledAt: null,
       estMin: parseInt(draft.time, 10), priority: draft.priority, interest: draft.interest,
       status: "active", snoozeUntil: null, createdAt: now(), doneAt: null
+    });
+    // any steps added here become children of the new task
+    draftSteps.forEach(function (s) {
+      state.tasks.push({
+        id: uid(), title: s.title, parentId: pid, categoryId: null, deadline: null, scheduledAt: null,
+        estMin: s.estMin, priority: "med", interest: "neutral",
+        status: "active", snoozeUntil: null, createdAt: now(), doneAt: null
+      });
     });
     save();
 
@@ -1107,11 +1133,43 @@
     ta.value = ""; ta.style.borderColor = "";
     resetDraft();
     refresh();
-    toast("Added to the pile");
+    toast(draftSteps.length ? "Added with " + draftSteps.length + " steps" : "Added to the pile");
+    draftSteps = []; renderAddSteps();
   });
   document.getElementById("title").addEventListener("keydown", function (e) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("save-task").click(); }
   });
+
+  // steps added on the Add page before the task exists — held here, then created as children on save
+  var draftSteps = [];
+  function renderAddSteps() {
+    var wrap = document.getElementById("add-steps");
+    wrap.innerHTML = draftSteps.map(function (s, i) {
+      var opts = STEP_TIMES.map(function (m) {
+        return '<option value="' + m + '"' + (s.estMin === m ? " selected" : "") + '>' + stepTimeLabel(m) + '</option>';
+      }).join("");
+      return '<div class="step-edit"><span class="dot">•</span><span class="st">' + esc(s.title) + '</span>' +
+        '<select class="step-time" data-steptime="' + i + '">' + opts + '</select>' +
+        '<button class="del" data-stepdel="' + i + '" aria-label="remove step">×</button></div>';
+    }).join("");
+    wrap.querySelectorAll("[data-stepdel]").forEach(function (b) {
+      b.addEventListener("click", function () { draftSteps.splice(parseInt(b.dataset.stepdel, 10), 1); renderAddSteps(); });
+    });
+    wrap.querySelectorAll("[data-steptime]").forEach(function (sel) {
+      sel.addEventListener("change", function () { draftSteps[parseInt(sel.dataset.steptime, 10)].estMin = parseInt(sel.value, 10); });
+    });
+  }
+  function addDraftStep() {
+    var input = document.getElementById("add-step-input");
+    var t = input.value.trim(); if (!t) return;
+    draftSteps.push({ title: t, estMin: 15 });
+    input.value = ""; renderAddSteps(); input.focus();
+  }
+  document.getElementById("add-step-add").addEventListener("click", addDraftStep);
+  document.getElementById("add-step-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); addDraftStep(); }
+  });
+  renderAddSteps();
 
   function resetDraft() {
     draft.deadline = "none"; draft.date = ""; draft.time = "15";

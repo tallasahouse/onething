@@ -1,5 +1,5 @@
 // One Thing — offline app shell cache
-const CACHE = "onething-v1";
+const CACHE = "onething-v3";
 const ASSETS = [
   "index.html",
   "manifest.json",

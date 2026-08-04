@@ -90,7 +90,9 @@
   @media (min-width: 860px) {
     .app {
       max-width: 1320px;
-      padding: 0 24px 28px;
+      height: 100vh;
+      padding: 0 24px 18px;
+      overflow: hidden;
     }
     nav.tabs { display: none; }
     .grid {
@@ -102,7 +104,8 @@
       grid-template-rows: auto 1fr;
       gap: 16px;
       align-items: stretch;
-      height: calc(100vh - 120px);
+      flex: 1;
+      min-height: 0;
     }
     #panel-add  { grid-area: add; }
     #panel-now  { grid-area: now; }
@@ -144,17 +147,13 @@
 
   @media (min-width: 860px) and (max-width: 1200px) {
     .grid {
-      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
+      grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr);
       grid-template-areas:
         "list add"
         "list now"
-        "plan plan";
-      grid-template-rows: auto auto auto;
-      height: auto;
+        "list plan";
+      grid-template-rows: auto auto 1fr;
     }
-    .panel { height: auto; }
-    #panel-list, #panel-now { max-height: calc(100vh - 120px); }
-    #panel-plan { max-height: none; }
   }
 
   /* ---------- NOW ---------- */
@@ -558,6 +557,8 @@
   }
   nav.tabs button .ti { font-size: 20px; }
   nav.tabs button[aria-current="true"] { color: var(--accent); }
+  /* placed after the base rule above so it reliably wins on desktop */
+  @media (min-width: 860px) { nav.tabs { display: none; } }
 
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
@@ -1635,25 +1636,38 @@
     if (t) { t.scheduledAt = null; save(); refresh(); }
   }
 
-  // auto-plan: order unscheduled tasks by the engine, then pack them onto the day
+  // auto-plan: pick the single best High, Medium, and Low priority task, then
+  // lay just those three onto the day back-to-back (never overlapping).
   function planMyDay() {
     var level = (state.energy && state.energy.level) || "okay";
-    var items = unscheduledSchedulable().slice().sort(function (a, b) { return score(b, level) - score(a, level); });
-    if (!items.length) { toast("Nothing left to schedule"); return; }
+    var pool = unscheduledSchedulable().slice().sort(function (a, b) { return score(b, level) - score(a, level); });
+    if (!pool.length) { toast("Nothing left to schedule"); return; }
+
+    // one task per priority level — the top-ranked in each
+    var chosen = [];
+    ["high", "med", "low"].forEach(function (p) {
+      var top = pool.find(function (t) { return effectivePriority(t) === p; });
+      if (top) chosen.push(top);
+    });
+    chosen.sort(function (a, b) { return score(b, level) - score(a, level); });
+
     var nowMin = minutesOfDay(now());
     var cursor = Math.max(START_HOUR * 60, Math.ceil(nowMin / 5) * 5);
     var taken = scheduledTodayItems().map(function (t) { return { s: minutesOfDay(t.scheduledAt), e: minutesOfDay(t.scheduledAt) + (t.estMin || 30) }; });
     function overlaps(s, e) { return taken.some(function (b) { return s < b.e && e > b.s; }); }
-    items.forEach(function (t) {
+
+    var placed = 0;
+    chosen.forEach(function (t) {
       var dur = t.estMin || 30;
       while (cursor + dur <= END_HOUR * 60 && overlaps(cursor, cursor + dur)) cursor += 5;
-      if (cursor + dur > END_HOUR * 60) return; // day is full — leave the rest unscheduled
+      if (cursor + dur > END_HOUR * 60) return; // no room left in the day
       var d = new Date(); d.setHours(0, 0, 0, 0); d.setMinutes(cursor);
       t.scheduledAt = d.getTime();
       taken.push({ s: cursor, e: cursor + dur });
-      cursor += dur;
+      cursor += dur; placed++;
     });
-    save(); refresh(); toast("Planned your day");
+    save(); refresh();
+    toast(placed ? "Planned " + placed + (placed === 1 ? " task" : " tasks") + " for today" : "No room left today");
   }
 
   function renderCalendar() {
